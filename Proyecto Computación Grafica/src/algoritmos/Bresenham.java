@@ -76,7 +76,6 @@ public class Bresenham {
         return Math.max(
 
                 Math.max(Math.abs(x1), Math.abs(x2)),
-
                 Math.max(Math.abs(y1), Math.abs(y2))
         );
     }

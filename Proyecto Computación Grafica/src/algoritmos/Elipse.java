@@ -12,121 +12,77 @@ public class Elipse {
     private int yc;
     private int rx;
     private int ry;
-    private int x;
-    private int y;
-    private double dx;
-    private double dy;
-    private double p1;
-    private double p2;
 
     public Elipse(int xc, int yc, int rx, int ry) {
-
         this.xc = xc;
         this.yc = yc;
         this.rx = rx;
         this.ry = ry;
-
-        inicializar();
-    }
-
-    private void inicializar() {
-
-        x = 0;
-
-        y = ry;
-
-        dx = 2 * ry * ry * x;
-
-        dy = 2 * rx * rx * y;
-
-        p1 = (ry * ry)
-
-                - (rx * rx * ry)
-
-                + (0.25 * rx * rx);
     }
 
     public void dibujar(Graphics g, PanelDibujo panel) {
 
-        region1(g, panel);
+        int x = 0;
+        int y = ry;
 
-        region2(g, panel);
-    }
+        double rx2 = rx * rx;
+        double ry2 = ry * ry;
 
-    private void region1(Graphics g, PanelDibujo panel) {
+        double dx = 2 * ry2 * x;
+        double dy = 2 * rx2 * y;
 
+        double p1 = ry2 - (rx2 * ry) + (0.25 * rx2);
+
+        // REGION 1
         while (dx < dy) {
 
-            dibujarSimetria(g, panel);
+            dibujarSimetria(g, panel, x, y);
 
             x++;
-
-            dx += 2 * ry * ry;
+            dx += 2 * ry2;
 
             if (p1 < 0) {
-
-                p1 += dx + (ry * ry);
-
+                p1 += dx + ry2;
             } else {
-
                 y--;
-
-                dy -= 2 * rx * rx;
-
-                p1 += dx - dy + (ry * ry);
+                dy -= 2 * rx2;
+                p1 += dx - dy + ry2;
             }
         }
 
-        p2 =
-                ((ry * ry) * ((x + 0.5) * (x + 0.5)))
-
-                        + ((rx * rx) * ((y - 1) * (y - 1)))
-
-                        - (rx * rx * ry * ry);
-    }
-
-    private void region2(Graphics g, PanelDibujo panel) {
+        // REGION 2 
+        double p2 =
+                (ry2 * (x + 0.5) * (x + 0.5))
+                        + (rx2 * (y - 1) * (y - 1))
+                        - (rx2 * ry2);
 
         while (y >= 0) {
 
-            dibujarSimetria(g, panel);
+            dibujarSimetria(g, panel, x, y);
 
             y--;
-
-            dy -= 2 * rx * rx;
+            dy -= 2 * rx2;
 
             if (p2 > 0) {
-
-                p2 += (rx * rx) - dy;
-
+                p2 += rx2 - dy;
             } else {
-
                 x++;
-
-                dx += 2 * ry * ry;
-
-                p2 += dx - dy + (rx * rx);
+                dx += 2 * ry2;
+                p2 += dx - dy + rx2;
             }
         }
     }
 
-    private void dibujarSimetria(Graphics g, PanelDibujo panel) {
-
+    private void dibujarSimetria(Graphics g, PanelDibujo panel, int x, int y) {
         panel.pixel(xc + x, yc + y, g);
-
         panel.pixel(xc - x, yc + y, g);
-
         panel.pixel(xc + x, yc - y, g);
-
         panel.pixel(xc - x, yc - y, g);
     }
 
     public int getMaximo() {
-
         return Math.max(
-
                 Math.abs(xc) + rx,
-
                 Math.abs(yc) + ry
         );
     }

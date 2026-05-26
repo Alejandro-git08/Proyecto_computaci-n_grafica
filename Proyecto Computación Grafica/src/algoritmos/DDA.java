@@ -12,11 +12,6 @@ public class DDA {
     private int y1;
     private int x2;
     private int y2;
-    private int dx;
-    private int dy;
-    private int pasos;
-    private float incrementoX;
-    private float incrementoY;
 
     public DDA(int x1, int y1, int x2, int y2) {
 
@@ -24,45 +19,63 @@ public class DDA {
         this.y1 = y1;
         this.x2 = x2;
         this.y2 = y2;
-
-        calcularValores();
-    }
-
-    private void calcularValores() {
-
-        dx = x2 - x1;
-
-        dy = y2 - y1;
-
-        pasos = Math.max(Math.abs(dx), Math.abs(dy));
-
-        incrementoX = (float) dx / pasos;
-
-        incrementoY = (float) dy / pasos;
     }
 
     public void dibujar(Graphics g, PanelDibujo panel) {
 
-        float x = x1;
+        int dx = x2 - x1;
+        int dy = y2 - y1;
 
-        float y = y1;
+        float m;
 
-        for (int i = 0; i <= pasos; i++) {
+        if (dx != 0) {
+            m = (float) dy / dx;
+        } else {
+            m = 0;
+        }
 
-            panel.pixel(Math.round(x), Math.round(y), g);
+        if (Math.abs(m) <= 1) {
 
-            x += incrementoX;
+            float y = y1;
 
-            y += incrementoY;
+            int pasoX;
+
+            if (x1 < x2) {
+                pasoX = 1;
+            } else {
+                pasoX = -1;
+            }
+
+            for (int x = x1; x != x2 + pasoX; x += pasoX) {
+                panel.pixel(x, Math.round(y), g);
+                y += m;
+            }
+
+        }
+
+        else {
+
+            float x = x1;
+            float incrementoX = 1 / m;
+            int pasoY;
+
+            if (y1 < y2) {
+                pasoY = 1;
+            } else {
+                pasoY = -1;
+            }
+
+            for (int y = y1; y != y2 + pasoY; y += pasoY) {
+                panel.pixel(Math.round(x), y, g);
+                x += incrementoX;
+            }
         }
     }
 
     public int getMaximo() {
 
         return Math.max(
-
                 Math.max(Math.abs(x1), Math.abs(x2)),
-
                 Math.max(Math.abs(y1), Math.abs(y2))
         );
     }

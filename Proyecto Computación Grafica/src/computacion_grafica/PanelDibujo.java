@@ -6,21 +6,30 @@ import algoritmos.*;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 
 public class PanelDibujo extends JPanel {
+
 
     private DDA dda;
     private Bresenham bresenham;
     private Circunferencia circunferencia;
     private Elipse elipse;
 
+
     private String algoritmoActual = "";
-    private int escala = 10;
-    private int centroX;
-    private int centroY;
+
+    private int escala = 20;
+    private int centroX = 600;
+    private int centroY = 450;
+
+    private int ultimoMouseX;
+    private int ultimoMouseY;
 
     private JPanel panelFormulario;
-
     private JLabel lbl1;
     private JLabel lbl2;
     private JLabel lbl3;
@@ -32,20 +41,24 @@ public class PanelDibujo extends JPanel {
     private JTextField txt4;
 
     private JButton btnDibujar;
-
     private JButton btnDDA;
     private JButton btnBresenham;
     private JButton btnCirculo;
     private JButton btnElipse;
     private JButton btnPresentacion;
+    private JButton btnZoomMas;
+    private JButton btnZoomMenos;
 
     public PanelDibujo() {
 
         setLayout(null);
 
-        crearBotones();
+        setBackground(Color.WHITE);
 
+        crearBotones();
         crearFormulario();
+        agregarZoomMouse();
+        agregarMovimientoPlano();
     }
 
     private void crearBotones() {
@@ -55,17 +68,25 @@ public class PanelDibujo extends JPanel {
         btnCirculo = new JButton("Circunferencia");
         btnElipse = new JButton("Elipse");
         btnPresentacion = new JButton("Presentación");
+        btnZoomMas = new JButton("+");
+        btnZoomMenos = new JButton("-");
+
         btnDDA.setBounds(20, 20, 120, 30);
         btnBresenham.setBounds(150, 20, 120, 30);
         btnCirculo.setBounds(280, 20, 150, 30);
         btnElipse.setBounds(440, 20, 120, 30);
         btnPresentacion.setBounds(570, 20, 150, 30);
+        btnZoomMas.setBounds(740, 20, 50, 30);
+        btnZoomMenos.setBounds(800, 20, 50, 30);
+
 
         add(btnDDA);
         add(btnBresenham);
         add(btnCirculo);
         add(btnElipse);
         add(btnPresentacion);
+        add(btnZoomMas);
+        add(btnZoomMenos);
 
         btnDDA.addActionListener(e -> {
 
@@ -97,10 +118,9 @@ public class PanelDibujo extends JPanel {
 
         btnPresentacion.addActionListener(e -> {
 
-            JOptionPane.showMessageDialog(null,
-
-                    "UNIVERSIDAD TECNOLÓGICA DE PANAMÁ\n"
-            		
+            JOptionPane.showMessageDialog(
+                    null, "UNIVERSIDAD TECNOLÓGICA DE PANAMÁ\n"
+                    
             				+ "INGENIERÍA DE SOFTWARE\n\n"
 
                             + "Proyecto #1\n"
@@ -115,11 +135,29 @@ public class PanelDibujo extends JPanel {
 
                             + "Alejandro Santos\n"
                             
-            				+"Omar Muñoz\n\n"
+            				+ "Omar Muñoz\n\n"
             				
-            				+"Grupo: 1SF142\n\n"
+            				+ "Grupo: 1SF142\n\n"
             				
-            				+"2026");
+            				+ "2026"
+            );
+        });
+
+        btnZoomMas.addActionListener(e -> {
+
+            if (escala < 80) {
+                escala += 2;
+                repaint();
+            }
+        });
+
+
+        btnZoomMenos.addActionListener(e -> {
+
+            if (escala > 5) {
+                escala -= 2;
+                repaint();
+            }
         });
     }
 
@@ -130,9 +168,7 @@ public class PanelDibujo extends JPanel {
 
         panelFormulario.setLayout(null);
 
-        panelFormulario.setBorder(
-                BorderFactory.createTitledBorder("Datos")
-        );
+        panelFormulario.setBorder(BorderFactory.createTitledBorder("Datos"));
 
         panelFormulario.setBounds(20, 70, 250, 250);
 
@@ -140,6 +176,7 @@ public class PanelDibujo extends JPanel {
         lbl2 = new JLabel();
         lbl3 = new JLabel();
         lbl4 = new JLabel();
+        
         txt1 = new JTextField();
         txt2 = new JTextField();
         txt3 = new JTextField();
@@ -155,7 +192,6 @@ public class PanelDibujo extends JPanel {
         txt3.setBounds(100, 110, 100, 25);
         lbl4.setBounds(20, 150, 80, 25);
         txt4.setBounds(100, 150, 100, 25);
-
         btnDibujar.setBounds(60, 190, 120, 30);
 
         panelFormulario.add(lbl1);
@@ -166,7 +202,6 @@ public class PanelDibujo extends JPanel {
         panelFormulario.add(txt3);
         panelFormulario.add(lbl4);
         panelFormulario.add(txt4);
-
         panelFormulario.add(btnDibujar);
 
         add(panelFormulario);
@@ -212,7 +247,6 @@ public class PanelDibujo extends JPanel {
     private void dibujarFigura() {
 
         if (!validarCampos()) {
-
             return;
         }
 
@@ -228,8 +262,6 @@ public class PanelDibujo extends JPanel {
                         obtenerEntero(txt4)
                 );
 
-                ajustarEscala(dda.getMaximo());
-
                 break;
 
             case "BRESENHAM":
@@ -242,8 +274,6 @@ public class PanelDibujo extends JPanel {
                         obtenerEntero(txt4)
                 );
 
-                ajustarEscala(bresenham.getMaximo());
-
                 break;
 
             case "CIRCULO":
@@ -254,8 +284,6 @@ public class PanelDibujo extends JPanel {
                         obtenerEntero(txt2),
                         obtenerEntero(txt3)
                 );
-
-                ajustarEscala(circunferencia.getMaximo());
 
                 break;
 
@@ -269,16 +297,11 @@ public class PanelDibujo extends JPanel {
                         obtenerEntero(txt4)
                 );
 
-                ajustarEscala(elipse.getMaximo());
-
                 break;
 
             default:
 
-                JOptionPane.showMessageDialog(
-                        null,
-                        "Seleccione un algoritmo"
-                );
+                JOptionPane.showMessageDialog(null, "Seleccione un algoritmo");
 
                 return;
         }
@@ -289,49 +312,23 @@ public class PanelDibujo extends JPanel {
 
     private boolean validarCampos() {
 
-        if (txt1.getText().trim().isEmpty()
-                || txt2.getText().trim().isEmpty()
-                || txt3.getText().trim().isEmpty()) {
-
-            JOptionPane.showMessageDialog(
-                    null,
-                    "Todos los campos son obligatorios"
-            );
-
+        if (txt1.getText().trim().isEmpty() || txt2.getText().trim().isEmpty() || txt3.getText().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Todos los campos son obligatorios");
             return false;
         }
 
-        if (txt4.isVisible()
-                && txt4.getText().trim().isEmpty()) {
-
-            JOptionPane.showMessageDialog(
-                    null,
-                    "Todos los campos son obligatorios"
-            );
-
+        if (txt4.isVisible() && txt4.getText().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Todos los campos son obligatorios");
             return false;
         }
 
-        if (!esNumero(txt1.getText())
-                || !esNumero(txt2.getText())
-                || !esNumero(txt3.getText())) {
-
-            JOptionPane.showMessageDialog(
-                    null,
-                    "Solo se permiten números enteros"
-            );
-
+        if (!esNumero(txt1.getText()) || !esNumero(txt2.getText()) || !esNumero(txt3.getText())) {
+            JOptionPane.showMessageDialog(null, "Solo se permiten números enteros");
             return false;
         }
 
-        if (txt4.isVisible()
-                && !esNumero(txt4.getText())) {
-
-            JOptionPane.showMessageDialog(
-                    null,
-                    "Solo se permiten números enteros"
-            );
-
+        if (txt4.isVisible() && !esNumero(txt4.getText())) {
+            JOptionPane.showMessageDialog(null, "Solo se permiten números enteros");
             return false;
         }
 
@@ -357,6 +354,7 @@ public class PanelDibujo extends JPanel {
         return Integer.parseInt(campo.getText());
     }
 
+
     private void limpiarCampos() {
 
         txt1.setText("");
@@ -366,64 +364,221 @@ public class PanelDibujo extends JPanel {
     }
 
 
-    private void ajustarEscala(int maximo) {
-
-        centroX = 700;
-        centroY = 450;
-
-        int margen = 100;
-        int anchoDisponible = 450;
-        int altoDisponible = 700;
-        int escalaX = anchoDisponible / (maximo * 2 + 1);
-        int escalaY = altoDisponible / (maximo * 2 + 1);
-
-        escala = Math.min(escalaX, escalaY);
-
-        if (escala < 2) {
-
-            escala = 2;
-        }
-    }
-
     public void pixel(int x, int y, Graphics g) {
 
-        int px = centroX + (x * escala);
-        int py = centroY - (y * escala);
+        int px = centroX + (x * escala) - (escala / 2);
+
+        int py = centroY - (y * escala) - (escala / 2);
 
         g.fillRect(px, py, escala, escala);
     }
 
-    private void dibujarPlano(Graphics g) {
 
-        g.setColor(Color.LIGHT_GRAY);
+    private void agregarZoomMouse() {
 
-        for (int x = centroX; x < getWidth(); x += escala) {
+        addMouseWheelListener(new MouseWheelListener() {
 
-            g.drawLine(x, 0, x, getHeight());
-        }
+            @Override
+            public void mouseWheelMoved(MouseWheelEvent e) {
 
-        for (int x = centroX; x > 300; x -= escala) {
+                if (e.getWheelRotation() < 0) {
 
-            g.drawLine(x, 0, x, getHeight());
-        }
+                    if (escala < 80) {
 
-        for (int y = centroY; y < getHeight(); y += escala) {
+                        escala += 2;
+                    }
 
-            g.drawLine(300, y, getWidth(), y);
-        }
+                } else {
 
-        for (int y = centroY; y > 0; y -= escala) {
+                    if (escala > 5) {
 
-            g.drawLine(300, y, getWidth(), y);
-        }
+                        escala -= 2;
+                    }
+                }
 
-        g.setColor(Color.BLACK);
-
-        g.drawLine(300, centroY, getWidth(), centroY);
-
-        g.drawLine(centroX, 0, centroX, getHeight());
+                repaint();
+            }
+        });
     }
 
+    private void agregarMovimientoPlano() {
+
+        MouseAdapter mouseAdapter = new MouseAdapter() {
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+
+                ultimoMouseX = e.getX();
+
+                ultimoMouseY = e.getY();
+            }
+
+            @Override
+            public void mouseDragged(MouseEvent e) {
+
+                int dx = e.getX() - ultimoMouseX;
+
+                int dy = e.getY() - ultimoMouseY;
+
+                centroX += dx;
+
+                centroY += dy;
+
+                ultimoMouseX = e.getX();
+
+                ultimoMouseY = e.getY();
+
+                repaint();
+            }
+        };
+
+        addMouseListener(mouseAdapter);
+
+        addMouseMotionListener(mouseAdapter);
+    }
+
+    private void dibujarPlano(Graphics g) {
+
+        Graphics2D g2 = (Graphics2D) g;
+
+        g2.setColor(new Color(220, 220, 220));
+
+        for (int x = centroX - (escala / 2);
+
+             x < getWidth();
+
+             x += escala) {
+
+            g2.drawLine(x, 0, x, getHeight());
+        }
+
+        for (int x = centroX - (escala / 2);
+
+             x > 0;
+
+             x -= escala) {
+
+            g2.drawLine(x, 0, x, getHeight());
+        }
+
+        for (int y = centroY - (escala / 2);
+
+             y < getHeight();
+
+             y += escala) {
+
+            g2.drawLine(0, y, getWidth(), y);
+        }
+
+        for (int y = centroY - (escala / 2);
+
+             y > 0;
+
+             y -= escala) {
+
+            g2.drawLine(0, y, getWidth(), y);
+        }
+
+
+        g2.setColor(Color.BLACK);
+
+        g2.setStroke(new BasicStroke(2));
+
+        g2.drawLine(0, centroY, getWidth(), centroY);
+
+        g2.drawLine(centroX, 0, centroX, getHeight());
+
+
+        if (escala >= 15) {
+
+            g2.setColor(Color.GRAY);
+
+            // X POSITIVOS
+
+            for (int x = centroX + escala;
+
+                 x < getWidth();
+
+                 x += escala) {
+
+                int valorX = (x - centroX) / escala;
+
+                g2.drawString(
+                        String.valueOf(valorX),
+                        x - 5,
+                        centroY + 15
+                );
+            }
+
+            // X NEGATIVOS
+
+            for (int x = centroX - escala;
+
+                 x > 0;
+
+                 x -= escala) {
+
+                int valorX = (x - centroX) / escala;
+
+                g2.drawString(
+                        String.valueOf(valorX),
+                        x - 5,
+                        centroY + 15
+                );
+            }
+
+            // Y POSITIVOS
+
+            for (int y = centroY - escala;
+
+                 y > 0;
+
+                 y -= escala) {
+
+                int valorY = -(y - centroY) / escala;
+
+                g2.drawString(
+                        String.valueOf(valorY),
+                        centroX + 8,
+                        y + 5
+                );
+            }
+
+            // Y NEGATIVOS
+
+            for (int y = centroY + escala;
+
+                 y < getHeight();
+
+                 y += escala) {
+
+                int valorY = -(y - centroY) / escala;
+
+                g2.drawString(
+                        String.valueOf(valorY),
+                        centroX + 8,
+                        y + 5
+                );
+            }
+        }
+
+        g2.setColor(Color.RED);
+
+        g2.fillRect(
+                centroX - (escala / 2),
+                centroY - (escala / 2),
+                escala,
+                escala
+        );
+
+        g2.setColor(Color.BLACK);
+
+        g2.drawString(
+                "(0,0)",
+                centroX + 10,
+                centroY - 10
+        );
+    }
 
     @Override
     protected void paintComponent(Graphics g) {
@@ -431,6 +586,9 @@ public class PanelDibujo extends JPanel {
         super.paintComponent(g);
 
         dibujarPlano(g);
+        
+        //azul por el contraste, te gusta?
+        g.setColor(Color.BLUE);
 
         switch (algoritmoActual) {
 
